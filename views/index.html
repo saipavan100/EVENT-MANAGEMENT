@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Event Manager</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f8f9fa;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+
+    h1, h2 {
+      text-align: center;
+      color: #007bff;
+    }
+
+    form {
+      max-width: 500px;
+      margin: 20px auto;
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    input, textarea, button {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+
+    button {
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    #allEvents, #upcomingEvents {
+      max-width: 800px;
+      margin: 20px auto;
+    }
+
+    #allEvents div, #upcomingEvents div {
+      background: #ffffff;
+      margin-bottom: 15px;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    #allEvents h3, #upcomingEvents h3 {
+      color: #343a40;
+      margin: 0 0 5px 0;
+    }
+
+    #allEvents p, #upcomingEvents p {
+      margin: 5px 0;
+      color: #555;
+    }
+
+    #allEvents {
+      border-top: 2px solid #007bff;
+    }
+
+    #upcomingEvents {
+      border-top: 2px solid #28a745;
+    }
+
+    h2 {
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Event Manager</h1>
+  <form id="eventForm">
+    <label for="title">Title:</label>
+    <input type="text" id="title" required><br>
+    
+    <label for="description">Description:</label>
+    <textarea id="description" required></textarea><br>
+    
+    <label for="date">Date:</label>
+    <input type="date" id="date" required><br>
+    
+    <button type="submit">Add Event</button>
+  </form>
+  
+  <h2>All Events</h2>
+  <div id="allEvents"></div>
+  
+  <h2>Upcoming Events</h2>
+  <div id="upcomingEvents"></div>
+  
+  <script>
+    const API_URL = 'http://localhost:3000/events';
+
+    // Add Event
+    document.getElementById('eventForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const eventData = {
+        title: document.getElementById('title').value,
+        description: document.getElementById('description').value,
+        date: document.getElementById('date').value,
+      };
+
+      try {
+        const response = await fetch(`${API_URL}/add`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(eventData),
+        });
+
+        if (response.ok) {
+          alert('Event added successfully!');
+          document.getElementById('eventForm').reset();
+          fetchEvents();
+        } else {
+          alert('Error adding event');
+        }
+      } catch (error) {
+        alert('Error connecting to server');
+      }
+    });
+
+    // Fetch Events
+    async function fetchEvents() {
+      try {
+        const allEventsRes = await fetch(API_URL);
+        const allEvents = await allEventsRes.json();
+        displayEvents(allEvents, 'allEvents');
+
+        const upcomingEventsRes = await fetch(`${API_URL}/upcoming`);
+        const upcomingEvents = await upcomingEventsRes.json();
+        displayEvents(upcomingEvents, 'upcomingEvents');
+      } catch (error) {
+        alert('Error fetching events');
+      }
+    }
+
+    // Display Events
+    function displayEvents(events, elementId) {
+      const container = document.getElementById(elementId);
+      container.innerHTML = events.map(event => `
+        <div>
+          <h3>${event.title}</h3>
+          <p>${event.description}</p>
+          <p>Date: ${new Date(event.date).toLocaleDateString()}</p>
+        </div>
+      `).join('');
+    }
+
+    // Initial Fetch
+    fetchEvents();
+  </script>
+</body>
+</html>
